@@ -14,40 +14,58 @@ import java.io.Serializable;
 
 public class CoorDeplAvion implements Serializable {
 //Cette classe contient les coordonnées et le déplacement de l'avion
-    
-    private String _Id;
+//De plus, elle contient les informations sur l'avion    
+    private int _NumVol;
+    private String _NomVol;
     private int _X;
     private int _Y;
     private int _Altitude;
-    private int _Cap;
+    private int _Angle;
     private int _Vitesse;
   
-    public CoorDeplAvion (String Id, int X, int Y, int Altitude, int Cap, int Vitesse)
+    /**
+     *
+     * @param NumVol
+     * @param NomVol
+     * @param X
+     * @param Y
+     * @param Altitude
+     * @param Angle
+     * @param Vitesse
+     */
+    public CoorDeplAvion (int NumVol, String NomVol, int X, int Y, int Altitude, int Angle, int Vitesse)
     {
-        _Id = Id;    
+        _NumVol = NumVol;
+        _NomVol = NomVol;
         _X = X;
         _Y = Y;
         _Altitude = Altitude;
-        _Cap = Cap;
-        _Vitesse = Vitesse;
+        _Angle = Angle;
+        _Vitesse = Vitesse;  
     }
-
+  
     public CoorDeplAvion ()
     {
     }
     
     /**
-     * getter Id
-     * @return la coordonnée Id de l'avion
+     * @return la coordonnée _NumVol de l'avion
      */
-    public String GetId ()
+    public int GetNumVol ()
     {
-        return _Id;
+        return _NumVol;
     }
     
     /**
-     * getter X
-     * @return la coordonnée X de l'avion
+     * @return la coordonnée _NomVol de l'avion
+     */
+    public String GetNomVol ()
+    {
+        return _NomVol;
+    }
+    
+    /**
+     * @return la coordonnée _X de l'avion
      */
     public int GetX ()
     {
@@ -55,8 +73,7 @@ public class CoorDeplAvion implements Serializable {
     }
     
     /**
-     * getter Y
-     * @return la coordonnée Y de l'avion
+     * @return la coordonnée _Y de l'avion
      */
     public int GetY ()
     {
@@ -64,8 +81,7 @@ public class CoorDeplAvion implements Serializable {
     }
     
     /**
-     * getter Altitude
-     * @return la coordonnée Altitude de l'avion
+     * @return la coordonnée _Altitude de l'avion
      */
     public int GetAltitude ()
     {
@@ -73,34 +89,38 @@ public class CoorDeplAvion implements Serializable {
     }
     
     /**
-     * getter Cap
-     * @return la coordonnée Cap de l'avion
+     * @return la coordonnée _Angle de l'avion
      */
-    public int GetCap ()
+    public int GetAngle ()
     {
-        return _Cap;
+        return _Angle;
     }
     
     /**
-     * getter Vitesse
-     * @return la coordonnée Vitesse de l'avion
+     * @return la coordonnée _Vitesse de l'avion
      */
     public int GetVitesse ()
     {
         return _Vitesse;
     }
-    
-    /**
-    * setter Id
-    * @param Id la coordonnée ID à ajouter à l'avion
+   
+     /**
+    * @param NumVol la coordonnée NumVol à ajouter à l'avion
     */
-    public void SetId (String Id)
+    public void SetNumVol (int NumVol)
     {
-        this._Id = Id;
+        this._NumVol = NumVol;
+    }
+   
+    /**
+    * @param NomVol la coordonnée NomVol à ajouter à l'avion
+    */
+    public void SetNomVol (String NomVol)
+    {
+        this._NomVol = NomVol;
     }
     
     /**
-    * setter X
     * @param X la coordonnée X à ajouter à l'avion 
     */
     public void SetX (int X)
@@ -109,7 +129,6 @@ public class CoorDeplAvion implements Serializable {
     }
     
     /**
-    * setter Y
     * @param Y la coordonnée Y à ajouter à l'avion 
     */
     public void SetY (int Y)
@@ -118,7 +137,6 @@ public class CoorDeplAvion implements Serializable {
     }
     
     /**
-    * setter Altitude
     * @param Altitude la coordonnée Altitude à ajouter à l'avion 
     */
     public void SetAltitude (int Altitude)
@@ -127,16 +145,14 @@ public class CoorDeplAvion implements Serializable {
     }
     
     /**
-    * setter Cap
-    * @param Cap la coordonnée Cap à ajouter à l'avion 
+    * @param Angle la coordonnée Angle à ajouter à l'avion 
     */
-    public void SetCap (int Cap)
+    public void SetAngle (int Angle)
     {
-        this._Cap = Cap;
+        this._Angle = Angle;
     }
     
     /**
-    * setter Vitesse
     * @param Vitesse la coordonnée Vitesse à ajouter à l'avion 
     */
     public void SetVitesse (int Vitesse)
