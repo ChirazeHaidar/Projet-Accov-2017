@@ -4,19 +4,16 @@
  * and open the template in the editor.
  */
 package Package.Commun;
-
 //Ce paquet contient toutes les classes communes utilisées dans mon Projet
 
 import java.io.Serializable;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 
 /**
  * @author Chiraze Haidar
  */
 
-public class Avion implements Serializable {
+public class Avion implements Serializable 
+{
 //Cette classe concerne les avions
 
     private CoorDeplAvion _Info;
@@ -38,9 +35,11 @@ public class Avion implements Serializable {
             {
                 wait();
             } 
-            catch (InterruptedException ex) 
+            catch (InterruptedException e) 
             {
-                Logger.getLogger(Avion.class.getName()).log(Level.SEVERE, null, ex);
+                System.out.println(e);
+                System.out.println ("Il y a eu un problème pour:");
+                System.out.println ("Avion: " + _Info.GetNomVol());
             }
         }
         _Verrouiller = true ;

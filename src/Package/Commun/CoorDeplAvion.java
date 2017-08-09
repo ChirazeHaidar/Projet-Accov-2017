@@ -12,7 +12,8 @@ import java.io.Serializable;
  * @author Chiraze Haidar
  */
 
-public class CoorDeplAvion implements Serializable {
+public class CoorDeplAvion implements Serializable 
+{
 //Cette classe contient les coordonnées et le déplacement de l'avion
 //De plus, elle contient les informations sur l'avion    
     private int _NumVol;
