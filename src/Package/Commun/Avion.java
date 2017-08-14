@@ -16,20 +16,20 @@ public class Avion implements Serializable
 {
 //Cette classe concerne les avions
 
-    private CoorDeplAvion _Info;
-    private boolean _Verrouiller;
+    public CoorDeplAvion _Info;
+    private boolean _EstVerrouille;
     
     /**
      * @return la valeur de _Verrouiller 
      */
-    public boolean Verrouiller ()
+    public boolean EstVerrouille ()
     {
-        return _Verrouiller;
+        return _EstVerrouille;
     }
     
-    public synchronized void Locked ()  
+    public synchronized void Verrouiller ()  
     {
-        while(_Verrouiller)
+        while(_EstVerrouille)
         {
             try 
             {
@@ -42,19 +42,19 @@ public class Avion implements Serializable
                 System.out.println ("Avion: " + _Info.GetNomVol());
             }
         }
-        _Verrouiller = true ;
+        _EstVerrouille = true ;
     }
     
-    public synchronized void Unlocked () 
+    public synchronized void Deverrouiller () 
     {
-        _Verrouiller = false;
+        _EstVerrouille = false;
         notifyAll();
     }
     
     public Avion(CoorDeplAvion Info) 
     {
         _Info = Info;
-        _Verrouiller = false;
+        _EstVerrouille = false;
     }
 
     /**
