@@ -13,6 +13,9 @@ import java.util.Optional;
 import java.io.IOException;
 import Package.Sockets.Vol;
 import java.util.ArrayList;
+import Package.Sockets.SACA;
+import Package.Sockets.Radar;
+import Package.Threads.VolThread;
 import static java.lang.Math.cos;
 import static java.lang.Math.sin;
 import java.io.ObjectInputStream;
@@ -20,6 +23,8 @@ import java.io.ObjectOutputStream;
 import Package.Sockets.Controleur;
 import javax.swing.DefaultListModel;
 import Package.Interface.VolInterface;
+import Package.Interface.SACAInterface;
+import Package.Interface.RadarInterface;
 import Package.Interface.ControleurInterface;
 
 /**
@@ -46,24 +51,32 @@ public class Fonction extends Thread
     public int PAUSE = 2000;
     //2 secondes
     
-    Avion _VolActualise;
     private Avion _Avion;
+    public Avion _VolActualise;
     private CoorDeplAvion _CDA;
     
     private VolInterface _VolInt;
+    private RadarInterface _RadInt;
+    private SACAInterface _SACAInt;
     private ControleurInterface _ContInt;
-    
+
     private ObjectInputStream _In;
     private ObjectOutputStream _Out;
     
     private Socket _Socket = null;
-    boolean _TravailContinuel = true;
+    public boolean _TravailContinuel = true;
 
+    String _NomRadar;
     String _NomControleur;
     Optional <Avion> _VolOptionnel;
     public static List <Avion> _VolDetecte;
 
-    DefaultListModel _ListeVol;
+    public VolThread _VolThread;
+    public VolThread _ControlleurThread;
+    public DefaultListModel _ListeVol;
+    
+
+//<editor-fold defaultstate="collapsed" desc="Méthodes pour le Socket 'Vol'">
 
     private String RandomNomVol ()
     {
@@ -94,254 +107,6 @@ public class Fonction extends Thread
         
         return Tampon.toString();
     }
-
-//<editor-fold defaultstate="collapsed" desc="Méthodes partagées entre les différents Sockets">
-    
-    public Boolean OpenConnexion () 
-    {
-    //Cette fonction ouvre la connexion entre le socket et le SACA
-    //SACA est le gestionnaire de vols
-    
-        try {
-                _Socket = new Socket(HOST, PORT);
-                return true;
-            } 
-        catch (IOException e) 
-        {
-            System.out.println (e);
-            System.out.println("Erreur de connexion:" 
-                               + VolInterface.class.getName());
-        }
-        return false;
-    }
-    
-    public void CloseConnexion () 
-    {
-    //Cette fonction ferme la connexion déjà établie entre le Socket et le SACA
-        
-        try 
-        {
-            _ContInt.TextArea.append("%nLe Controleur: "  + Controleur.class.getName() 
-                                   + "est bien déconnecté");
-            _VolInt.TextArea.append("%nLe Vol: "  + Vol.class.getName() 
-                                   + "est bien déconnecté");
-            
-            _TravailContinuel = false;
-            
-            Fermer();
-            
-            if (_Socket != null) 
-            {
-                _Socket.close();
-            }
-            if (_In != null) 
-            {
-                _In.close();
-            }
-            if (_Out != null) 
-            {
-                _Out.close();
-            }
-            this.interrupt();
-        } 
-        catch (IOException e) 
-        {
-            System.out.println(e);
-            System.out.println("Erreur de déconnexion" 
-                               + VolInterface.class.getName());
-        }
-    }
-    
-    public void Envoyer (Message Mess) 
-    {
-        try 
-        {
-            _Out.reset();
-            _Out.writeObject(Mess);
-            _Out.flush();
-            //La commande 'flush' rince le flux de sortie 'Buffer'.
-        } 
-        catch (IOException e) 
-        {
-            System.out.println(e);
-            switch (Mess._Type) 
-            {
-                case "Vol":
-                {
-                    System.out.println("Erreur du message envoyé du Vol: "
-                                      + Vol.class.getName());
-                break;
-                } 
-                case "Controleur":
-                {
-                    System.out.println("Erreur du message envoyé du Controleur: "
-                                      + Controleur.class.getName());
-                    break;
-                }
-                default: break;
-            } 
-            
-        }
-    }
- 
-    public void Recevoir ()
-    {
-        try 
-        {
-            if (_Socket == null || _Socket.isClosed()) 
-            {
-                return;
-            }
-            
-            Object Mess = _In.readObject();
-
-            _VolInt.TextArea.append("%n [SACA]: Nouveau message reçu.");
-            /*
-             * La méthode 'append' concatène la représentation de chaîne
-             * de tout autre type de données à la fin de l'objet appelant
-             */
-            GererMessage(Mess);
-
-        } 
-        catch (IOException e) 
-        {
-            System.out.println(e);
-            System.out.println("Erreur Entrée/Sortie");
-        } 
-        catch (ClassNotFoundException e) 
-        {
-            System.out.println(e);
-            System.out.println("Erreur de Classe");
-        }
-    }
-
-    private void Fermer () 
-    {  
-        try 
-        {
-            _ContInt.TextArea.append("%nLa Connexion du Controleur: "  + Controleur.class.getName() 
-                                   + "est bien fermée");
-            _VolInt.TextArea.append("%nLa Connexion du Vol: "  + Vol.class.getName() 
-                                   + "est bien Fermée");
-                
-            _Out.reset();
-            Message Mess = new Message ("Connexion Fermée","Vol",
-                                        _CDA.GetNomVol() ,_Avion,"SACA");
-            _Out.writeObject(Mess);
-            _Out.flush();
-
-        } 
-        catch (IOException e) 
-        {
-            System.out.println(e);
-            System.out.println("Erreur de déconnexion: " 
-                              + VolInterface.class.getName());
-        }
-    }
-     
-    private void Envoyer_Caracteristique() 
-     {
-     /*Cette fonction envoye les différentes caractéristiques 
-      *de l'avion courante au gestionnnaire de vol
-      */
-         
-        Message Mess = new Message("Information", "Vol", _CDA.GetNomVol(),
-                                   _Avion, "Radar");
-        Envoyer (Mess);
-    }
-
-    private void GererMessage(Object Mess) 
-    {
-        if (Mess == null) 
-        {
-            _VolInt.TextArea.append("%n Message Invalide!!");
-            _ContInt.TextArea.append("%nMessage Invalide!!");
-            return;
-            //J'ai utilisé return pour sortie de la fonction
-        }
-
-        Message _Mess = Message.class.cast (Mess);
-        
-        switch (_Mess._Type) 
-        {
-            case "Controleur":
-            {
-                switch (_Mess._Command) 
-                {
-                    case "Changer Angle":
-                    {
-                        _VolInt.TextArea.append("%n'" + _Mess._Envoyeur +
-                                                "': Changer Angle.");
-                        ChangerAngle (_Mess._Avion._Info.GetAngle());
-                        Message NouveauMessage = new Message("AngleModifie", "Vol",
-                                  _CDA.GetNomVol(), _Mess._Avion, _Mess._Envoyeur);
-                        Envoyer (NouveauMessage);
-                        _VolInt.TextArea.append("%n'" + _Mess._Envoyeur
-                                              + "': L'Angle est bien modifiée.");
-                        AfficherMessage ();
-                        break;
-                    }
-                    case "Changer Vitesse":
-                    {
-                        _VolInt.TextArea.append("%n'" + _Mess._Envoyeur +
-                                                "': Changer Vitesse.");
-                        ChangerVitesse (_Mess._Avion._Info.GetVitesse());
-                        Message NouveauMessage = new Message("VitesseModifie", "Vol",
-                                    _CDA.GetNomVol(), _Mess._Avion, _Mess._Envoyeur);
-                        Envoyer (NouveauMessage);
-                        _VolInt.TextArea.append("%n'" + _Mess._Envoyeur
-                                              + "': La vitesse est bien modifiée.");
-                        AfficherMessage ();
-                        break;
-                    }
-                    case "changer Altitude":
-                    {
-                        _VolInt.TextArea.append("%n'" + _Mess._Envoyeur +
-                                                "': Changer Altitude.");
-                        ChangerAltitude (_Mess._Avion._Info.GetAltitude());
-                        Message NouveauMessage = new Message("AltitudeModifie", "Vol",
-                                     _CDA.GetNomVol(), _Mess._Avion, _Mess._Envoyeur);
-                        Envoyer (NouveauMessage);
-                        _VolInt.TextArea.append("%n'" + _Mess._Envoyeur
-                                              + "': L'Altitude est bien modifiée.");
-                        AfficherMessage ();
-                        break;
-                    }
-                    case "Information":
-                    {
-                        _ContInt.TextArea.append("%n'" + _Mess._Envoyeur + "':Les Caractéristiques de l'avion sont bien modifiées");
-                        ReactualiserVol (_Mess);
-                        break;
-                    }
-                    case "MiseAJour":
-                    {
-                        _ContInt.TextArea.append("%n'" + _Mess._Envoyeur + "': " + _Mess._Command);
-                        ReactualiserVol (_Mess);
-                        
-                        _VolActualise = ReactualiserVol(_Mess);
-                        
-                        if (_VolActualise != null) 
-                        {
-                            _VolActualise.Deverrouiller();
-                        }
-                        else 
-                        {
-                        //Avion est accidenté ou débarqué
-                            SupprimerVol (_Mess);
-                            _ContInt.TextArea.append("%n'" + _Mess._Envoyeur + "': " + _Mess._Command);
-                        }
-                        break;
-                    }
-                    default: break;
-                }
-                break;
-            }
-            default: break;
-        }
-        
-    }
-
-    
     /**
      * ******************************
      *** Fonctions gérant le déplacement de l'avion : ne pas modifier
@@ -411,12 +176,6 @@ public class Fonction extends Thread
         {
             _CDA.SetAltitude(Alt);
         }
-    }
-
-    public void AfficherMessage () 
-    {
-    //Affichage des caractéristiques courantes de l'avion
-        _VolInt.TextArea.append("%n" + _Avion.GetInfo());
     }
 
     private Boolean CalculDeplacement() 
@@ -505,9 +264,444 @@ public class Fonction extends Thread
             Envoyer_Caracteristique ();
         }
     }
-    //</editor-fold>
 
-    //<editor-fold defaultstate="collapsed" desc="Méthodes Pour le Socket Controleur'">
+    private void Envoyer_Caracteristique() 
+    {
+    /*Cette fonction envoye les différentes caractéristiques 
+     *de l'avion courante au gestionnnaire de vol
+    */
+         
+        Message Mess = new Message("Information", "Vol", _CDA.GetNomVol(),
+                                   _Avion, "Radar");
+        Envoyer (Mess);
+    }
+
+    public void AfficherMessage () 
+    {
+    //Affichage des caractéristiques courantes de l'avion
+        _VolInt.TextArea.append("%n" + _Avion.GetInfo());
+    }
+    
+//</editor-fold>
+
+//<editor-fold defaultstate="collapsed" desc="Méthodes partagées entre les différents Sockets">
+    
+    public Boolean OpenConnexion () 
+    {
+    //Cette fonction ouvre la connexion entre le socket et le SACA
+    //SACA est le gestionnaire de vols
+    
+        try {
+                _Socket = new Socket(HOST, PORT);
+                return true;
+            } 
+        catch (IOException e) 
+        {
+            System.out.println (e);
+            System.out.println("Erreur de connexion:" 
+                               + VolInterface.class.getName());
+        }
+        return false;
+    }
+    
+    public void CloseConnexion () 
+    {
+    //Cette fonction ferme la connexion déjà établie entre le Socket et le SACA
+        
+        try 
+        {
+            _ContInt.TextArea.append("%nLe Controleur: "  + Controleur.class.getName() 
+                                   + "est bien déconnecté");
+            _VolInt.TextArea.append("%nLe Vol: "  + Vol.class.getName() 
+                                   + "est bien déconnecté");
+            _RadInt.TextArea.append("%nLe Radar: "  + Radar.class.getName() 
+                                   + "est bien déconnecté");
+            
+            _TravailContinuel = false;
+            
+            Fermer();
+            
+            if (_Socket != null) 
+            {
+                _Socket.close();
+            }
+            if (_In != null) 
+            {
+                _In.close();
+            }
+            if (_Out != null) 
+            {
+                _Out.close();
+            }
+            this.interrupt();
+        } 
+        catch (IOException e) 
+        {
+            System.out.println(e);
+            System.out.println("Erreur de déconnexion" 
+                               + VolInterface.class.getName());
+            System.out.println("Erreur de déconnexion" 
+                               + ControleurInterface.class.getName());
+            System.out.println("Erreur de déconnexion" 
+                               + RadarInterface.class.getName());
+        }
+    }
+    
+    public synchronized void Envoyer (Message Mess) 
+    {
+        try 
+        {
+            if (Mess._Type.equals("Controleur")) 
+            {
+                this._Avion.Verrouiller();
+
+            }
+            
+            _Out.reset();
+            _Out.writeObject(Mess);
+            _Out.flush();
+            //La commande 'flush' rince le flux de sortie 'Buffer'.
+        } 
+        catch (IOException e) 
+        {
+            System.out.println(e);
+            switch (Mess._Type) 
+            {
+                case "Vol":
+                {
+                    System.out.println("Erreur du message envoyé du Vol: "
+                                      + Vol.class.getName());
+                break;
+                } 
+                case "Controleur":
+                {
+                    System.out.println("Erreur du message envoyé du Controleur: "
+                                      + Controleur.class.getName());
+                    break;
+                }
+                case "Radar":
+                {
+                    System.out.println("Erreur du message envoyé du Radar: "
+                                      + Radar.class.getName());
+                    break;
+                }
+                default: break;
+            } 
+            
+        }
+    }
+
+    public void Recevoir ()
+    {
+        try 
+        {
+            Object Objet = _In.readObject();
+
+            if (_Socket == null || _Socket.isClosed() || !_TravailContinuel || (Objet == null)) 
+            {
+                System.out.println ("%nLe message reçu est invalide");
+                return;
+            }
+            
+            _VolInt.TextArea.append("%n [SACA]: Nouveau message reçu.");
+            /*
+             * La méthode 'append' concatène la représentation de chaîne
+             * de tout autre type de données à la fin de l'objet appelant
+             */
+            GererMessage(Objet);
+
+        } 
+        catch (IOException  | ClassNotFoundException e) 
+        {
+            System.out.println(e);
+            System.out.println("%nErreur!!!");
+        } 
+        
+    }
+
+    private void Fermer () 
+    {  
+        try 
+        {
+            _ContInt.TextArea.append ("%nLa Connexion du Controleur: "  + Controleur.class.getName() 
+                                    + "est bien fermée");
+            _VolInt.TextArea.append ("%nLa Connexion du Vol: "  + Vol.class.getName() 
+                                   + "est bien Fermée");
+            _RadInt.TextArea.append ("%nLa Connexion du Radar: "  + Radar.class.getName() 
+                                   + "est bien Fermée");
+                
+            _Out.reset();
+            Message Mess = new Message ("Connexion Fermée","Vol",
+                                        _CDA.GetNomVol() ,_Avion,"SACA");
+            _Out.writeObject(Mess);
+            _Out.flush();
+
+        } 
+        catch (IOException e) 
+        {
+            System.out.println(e);
+            System.out.println("Erreur de déconnexion: " 
+                              + VolInterface.class.getName());
+        }
+    }
+     
+    private void GererMessage(Object Obj) 
+    {
+        if (Obj == null) 
+        {
+            _VolInt.TextArea.append ("%n Message Invalide!!");
+            _ContInt.TextArea.append ("%nMessage Invalide!!");
+            _RadInt.TextArea.append ("%nMessage Invalide!!");
+            return;
+            //J'ai utilisé return pour sortie de la fonction
+        }
+
+        Message _Mess = Message.class.cast (Obj);
+        
+        switch (_Mess._Type) 
+        {
+            case "Vol":
+            {
+                _VolThread = ChercherThread (_Mess._Avion._Info.GetNumVol());
+                //Chercher le thread du Vol
+                
+                if (_VolThread == null)
+                {
+                    _SACAInt.TextArea.append ("Le Vol: '%s', est introuvable." + _Mess._Receveur);
+                    return;
+                }
+                
+                switch (_Mess._Command) 
+                {
+                    case "Connection":
+                    {
+                        SACA._VolThreads.remove (_VolThread);
+                        if (SACA._RadarThreads != null && SACA._RadarThreads.size() > 0)
+                        {
+                            for (int i = 0; i < SACA._RadarThreads.size(); i++)
+                            {
+                                Message NouveauMessage = new Message ("Attention: La Connexion est fermée",
+                                                                      "Radar", _Mess._Envoyeur, _Mess._Avion, 
+                                                                      "Radar/Controlleur" + SACA._RadarThreads.get(i).GetNum());
+                                
+                                SACA._RadarThreads.get(i);
+                                Envoyer (NouveauMessage);
+                            }
+                        }
+                        break;
+                    }
+                    case "MiseAJour":
+                    {
+                        _VolThread._Avion = _Mess._Avion;
+                        _SACAInt.TextArea.append ("%n Envoyeur du message: '" + _Mess._Envoyeur
+                                                + "', Recipient du message: '" + _Mess._Receveur
+                                                + "', Commande du message: '" + _Mess._Command
+                                                + "'");
+                        if (SACA._RadarThreads != null && SACA._RadarThreads.size () > 0)
+                        {
+                            for (int i = 0; i < SACA._RadarThreads.size(); i++)
+                            {
+                                Message NouveauMessage = new Message (_Mess._Command, "Radar", _Mess._Envoyeur, _Mess._Avion, 
+                                                                      "Radar/Controlleur" + SACA._RadarThreads.get(i).GetNum());
+                                
+                                SACA._RadarThreads.get(i);
+                                Envoyer (NouveauMessage);
+                            }
+                        }
+                        break;
+                    }
+                    case "Information"://Information sur le Vol
+                    {
+                        _VolThread._Avion = _Mess._Avion;
+                        _SACAInt.TextArea.append ("%n L'envoyeur du message: '" + _Mess._Envoyeur +
+                                                  "' --> Tous: La position du Vol '" + _Mess._Avion._Info.GetNomVol() +
+                                                  "'avait été mise à jour");
+                        
+                        if (SACA._RadarThreads != null && SACA._RadarThreads.size () > 0)
+                        {
+                            for (int i = 0; i < SACA._RadarThreads.size(); i++)
+                            {
+                                Message NouveauMessage = new Message ("Information", "Radar", _Mess._Envoyeur, _Mess._Avion, 
+                                                                      "Radar/Controlleur" + SACA._RadarThreads.get(i).GetNum());
+                                
+                                SACA._RadarThreads.get(i);
+                                Envoyer (NouveauMessage);
+                            }
+                        }
+                        break;
+                    }
+                    case "Alerte"://Avion est accidenté ou débarqué
+                    {
+                        _VolThread._Avion = _Mess._Avion;
+                        _SACAInt.TextArea.append("%nEnvoyeur '" + _Mess._Envoyeur
+                                               + "' --> Recipient '" +_Mess._Receveur
+                                               + "': " + _Mess._Command);
+                        SACA._VolThreads.remove(_VolThread);
+                        _VolThread.interrupt();
+                        
+                        if (SACA._RadarThreads != null && SACA._RadarThreads.size () > 0)
+                        {
+                            for (int i = 0; i < SACA._RadarThreads.size(); i++)
+                            {
+                                SACA._RadarThreads.get(i);
+                                Envoyer (_Mess);
+                            }
+                        }
+                        break;
+                    }
+                    case "Changer Angle":
+                    {
+                        _VolInt.TextArea.append("%n'" + _Mess._Envoyeur +
+                                                "': Changer Angle.");
+                        ChangerAngle (_Mess._Avion._Info.GetAngle());
+                        Message NouveauMessage = new Message("AngleModifie", "Vol",
+                                  _CDA.GetNomVol(), _Mess._Avion, _Mess._Envoyeur);
+                        Envoyer (NouveauMessage);
+                        _VolInt.TextArea.append("%n'" + _Mess._Envoyeur
+                                              + "': L'Angle est bien modifiée.");
+                        AfficherMessage ();
+                        break;
+                    }
+                    case "Changer Vitesse":
+                    {
+                        _VolInt.TextArea.append("%n'" + _Mess._Envoyeur +
+                                                "': Changer Vitesse.");
+                        ChangerVitesse (_Mess._Avion._Info.GetVitesse());
+                        
+                        Message NouveauMessage = new Message("VitesseModifie", "Vol",
+                                    _CDA.GetNomVol(), _Mess._Avion, _Mess._Envoyeur);
+                        
+                        Envoyer (NouveauMessage);
+                        _VolInt.TextArea.append("%n'" + _Mess._Envoyeur
+                                              + "': La vitesse est bien modifiée.");
+                        AfficherMessage ();
+                        break;
+                    }
+                    case "changer Altitude":
+                    {
+                        _VolInt.TextArea.append("%n'" + _Mess._Envoyeur +
+                                                "': Changer Altitude.");
+                        ChangerAltitude (_Mess._Avion._Info.GetAltitude());
+                        
+                        Message NouveauMessage = new Message("AltitudeModifie", "Vol",
+                                     _CDA.GetNomVol(), _Mess._Avion, _Mess._Envoyeur);
+                        
+                        Envoyer (NouveauMessage);
+                        _VolInt.TextArea.append("%n'" + _Mess._Envoyeur
+                                              + "': L'Altitude est bien modifiée.");
+                        AfficherMessage ();
+                        break;
+                    }
+                    default: break;
+                }
+                break;
+            }
+            case "Controleur":
+            {
+                _VolThread = ChercherThread (_Mess._Avion._Info.GetNumVol());
+                //Chercher le Vol pour pouvoir envoyer la commande
+                        
+                if (_VolThread == null)
+                {
+                    _SACAInt.TextArea.append("%nLe Vol '" + _Mess._Receveur + "' est introuvable!!!");
+                    return;
+                }
+                        
+                switch (_Mess._Command) 
+                {
+                    case "Connection"://Utiliser juste comme information
+                    {
+                        _SACAInt.TextArea.append ("%nEnvoyeur: '" + _Mess._Envoyeur + 
+                                                  "' --> 'SACA': Attention; La Connexion est fermée");
+                        
+                        _ControlleurThread = ChercherRadarThread (Integer.parseInt (_Mess._Envoyeur));
+                        
+                        if (_ControlleurThread != null)
+                        {
+                            SACA._RadarThreads.remove(_ControlleurThread);
+                        }
+                        break;
+                    }
+                    case "Information":
+                    {
+                        _ContInt.TextArea.append("%n'" + _Mess._Envoyeur + 
+                                                 "':Les Caractéristiques de l'avion sont bien modifiées");
+                        ReactualiserVol (_Mess);
+                        break;
+                    }
+                    case "MiseAJour":
+                    {
+                        _ContInt.TextArea.append("%n'" + _Mess._Envoyeur + "': " + _Mess._Command);
+                        ReactualiserVol (_Mess);
+                     
+                        _VolActualise = ReactualiserVol(_Mess);
+                      
+                        if (_VolActualise != null) 
+                        {
+                            _VolActualise.Deverrouiller();
+                        }
+                        else 
+                        {
+                        //Avion est accidenté ou débarqué
+                            SupprimerVol (_Mess);
+                            _ContInt.TextArea.append("%n'" + _Mess._Envoyeur + "': " + _Mess._Command);
+                        }
+                        break;
+                    }
+                    case "Changer Angle":
+                    {
+                        _SACAInt.TextArea.append ("%nEnvoyeur '" + _Mess._Envoyeur +
+                                                  "' --> Recipient '" + _Mess._Receveur +
+                                                  "': Changement de l'Angle du Vol");
+                        _VolThread.Envoyer(_Mess);
+                        break;
+                    }
+                    case "Changer Altitude":
+                    {
+                        _SACAInt.TextArea.append ("%nEnvoyeur '" + _Mess._Envoyeur +
+                                                  "' --> Recipient '" + _Mess._Receveur +
+                                                  "': Changement de l'Altitude du Vol");
+                        _VolThread.Envoyer(_Mess);
+                        break;
+                    }
+                    case "Changer Vitesse":
+                    {
+                        _SACAInt.TextArea.append ("%nEnvoyeur '" + _Mess._Envoyeur +
+                                                  "' --> Recipient '" + _Mess._Receveur +
+                                                  "': Changement de la Vitesse du Vol");
+                        _VolThread.Envoyer(_Mess);
+                        break;
+                    }
+                    default: break;
+                }
+                break;
+            }
+            case "Radar":
+            {
+                switch (_Mess._Command) 
+                {
+                    case "Information": 
+                        {
+                            _RadInt.TextArea.append("%n'" + _Mess._Envoyeur + 
+                                                    "':Les Caractéristiques de l'avion sont bien modifiées");
+                            ReactualiserVol (_Mess);
+                            break;
+                        }
+                        default:
+                        {
+                            SupprimerVol(_Mess);
+                            _RadInt.TextArea.append("%n'" + _Mess._Envoyeur + "': " + _Mess._Command);
+                            break;
+                        }
+                    }
+                }
+                default: break;
+            }
+        }
+   
+//</editor-fold>
+
+//<editor-fold defaultstate="collapsed" desc="Méthodes Pour le Socket Controleur'">
 
     public  void ChangementAngle (int NumVol, int Angle) throws InterruptedException 
     {
@@ -604,18 +798,10 @@ public class Fonction extends Thread
             _VolDetecte.remove(_VolOptionnel.get());
 
         }
-        
-        _ListeVol = new DefaultListModel();
-        
-        for (int i = 0; i < _VolDetecte.size(); i++) 
-        {
-            _ListeVol.addElement(_VolDetecte.get(i).GetInfo());
-        }
-       
-        _ContInt.ListeVol.setModel(_ListeVol);
     }
-
-    private Avion ReactualiserVol (Message _Mess) {
+        
+    private Avion ReactualiserVol (Message _Mess) 
+    {
 
         if (_VolDetecte == null) 
         {
@@ -649,5 +835,109 @@ public class Fonction extends Thread
         
         return _VolActualise;
     }
-    //</editor-fold>
+//</editor-fold>
+
+//<editor-fold defaultstate="collapsed" desc="Méthodes Pour le Socket Radar'">
+
+    public void RemplirListeVol (Object ListeVol) 
+    {
+        if (ListeVol != null) 
+        {
+            _VolDetecte = (ArrayList) ListeVol;
+            
+            _ListeVol = new DefaultListModel();
+            
+            for (int i = 0; i < _VolDetecte.size(); i++) 
+            {
+                _ListeVol.addElement(_VolDetecte.get(i).GetInfo());
+
+            }
+            _RadInt.ListeVol.setModel(_ListeVol);
+        }
+    }
+
+    public Object RecevoirListeVol() 
+    {
+        try 
+        {
+            return _In.readObject();
+        } 
+        catch (IOException | ClassNotFoundException e) 
+        {
+            System.out.println(e);
+            System.out.println("%nLe Radar: '" + Radar.class.getName() +
+                               "' n'a pas reçu la liste de vol!!");
+        }
+        return null;
+    }
+//</editor-fold>
+
+//<editor-fold defaultstate="collapsed" desc="Méthodes Pour le Socket SACA'">
+
+    public void EnvoyerListeVol(Object _Obj, String Message) 
+    {
+        try 
+        {
+            _Out.writeObject(_Obj);
+            _Out.flush();
+            _SACAInt.TextArea.append(Message);
+        } catch (IOException e) 
+        {
+            System.out.println(e);
+            System.out.println("%nLe SACA: '" + SACA.class.getName() +
+                               "' n'a pas réussi à envoyer la liste de vol!!");
+        }
+    }
+    
+    public void AjouterVol () 
+    {
+        _VolThread = new VolThread (this);
+    }
+
+    public List<Avion> GetVol() 
+    {
+        if (SACA._VolThreads == null) 
+        {
+            return null;
+        }
+        
+        List <Avion> CollectionAvion = new ArrayList();
+        
+        VolThread _VolTh;
+        
+        for (int i = 0; i < SACA._VolThreads.size(); i++) 
+        {
+            _VolTh = SACA._VolThreads.get(i);
+            
+            CollectionAvion.add(_VolTh._Avion);
+        }
+        return CollectionAvion;
+    }
+
+    public VolThread ChercherRadarThread (int Num) 
+    {
+        for (int i = 0; i < SACA._RadarThreads.size(); i++) 
+        {
+            if (Num == SACA._RadarThreads.get(i).GetNum()) 
+            {
+                return SACA._RadarThreads.get(i);
+            }
+        }
+        return null;
+    }
+
+    private VolThread ChercherThread(int Num) 
+    {
+        for (int i = 0; i < SACA._VolThreads.size(); i++) 
+        {
+            if (SACA._VolThreads.get(i)._Avion._Info.GetNumVol() == Num) 
+            {
+                return SACA._VolThreads.get(i);
+            }
+        }
+        return null;
+    }
+
+//</editor-fold>
+
 }
