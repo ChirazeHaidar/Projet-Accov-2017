@@ -100,6 +100,3 @@ public class Vol extends Thread
         }
     }
 }
-    
-    
-
