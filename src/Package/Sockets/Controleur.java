@@ -23,7 +23,7 @@ public class Controleur extends Thread
 
 
     private Socket _Socket;
-    private Fonction _Fonction;
+    public Fonction _Fonction;
     
     private String _NomControleur;
     
@@ -31,7 +31,11 @@ public class Controleur extends Thread
     private ObjectOutputStream _Out;
     
     private ControleurInterface _ContInt;
-
+    
+    public Controleur ()
+    {
+        
+    }
     public Controleur(ControleurInterface _ContInterface) 
     {
         _ContInt = _ContInterface;
