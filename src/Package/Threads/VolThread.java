@@ -32,6 +32,11 @@ public class VolThread extends Thread
     private SACAInterface _SACAInt;
     private ObjectOutputStream _Out;
 
+    public VolThread() 
+    {
+
+    }
+
     public int GetNum() 
     {
         return _Num;

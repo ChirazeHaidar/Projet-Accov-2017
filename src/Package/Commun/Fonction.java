@@ -75,7 +75,6 @@ public class Fonction extends Thread
     public VolThread _ControlleurThread;
     public DefaultListModel _ListeVol;
     
-
 //<editor-fold defaultstate="collapsed" desc="Méthodes pour le Socket 'Vol'">
 
     private String RandomNomVol ()
@@ -288,6 +287,7 @@ public class Fonction extends Thread
     
     public Boolean OpenConnexion () 
     {
+        System.out.println("ici");
     //Cette fonction ouvre la connexion entre le socket et le SACA
     //SACA est le gestionnaire de vols
     
@@ -397,7 +397,10 @@ public class Fonction extends Thread
         {
             Object Objet = _In.readObject();
 
-            if (_Socket == null || _Socket.isClosed() || !_TravailContinuel || (Objet == null)) 
+            if (_Socket != null && !_Socket.isClosed() && _TravailContinuel && Objet != null) 
+            {
+            } 
+            else 
             {
                 System.out.println ("%nLe message reçu est invalide");
                 return;
@@ -891,7 +894,7 @@ public class Fonction extends Thread
     
     public void AjouterVol () 
     {
-        _VolThread = new VolThread (this);
+        _VolThread = new VolThread ();
     }
 
     public List<Avion> GetVol() 
