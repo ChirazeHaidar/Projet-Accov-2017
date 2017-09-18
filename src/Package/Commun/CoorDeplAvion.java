@@ -14,26 +14,28 @@ import java.io.Serializable;
 
 public class CoorDeplAvion implements Serializable 
 {
-//Cette classe contient les coordonnées et le déplacement de l'avion
-//De plus, elle contient les informations sur l'avion    
-    private int _NumVol;
-    private String _NomVol;
-    private int _X;
-    private int _Y;
-    private int _Altitude;
-    private int _Angle;
-    private int _Vitesse;
+    //Cette classe contient les coordonnées et le déplacement de l'avion
+    //De plus, elle contient les informations sur l'avion    
+    
+    public static int _NumVol;
+    public static String _NomVol;
+  
+    public static int _X;
+    public static int _Y;
+    public static int _Angle;
+    public static int _Vitesse;
+    public static int _Altitude;
   
     /**
-     *
      * @param NumVol
      * @param NomVol
      * @param X
      * @param Y
-     * @param Altitude
      * @param Angle
      * @param Vitesse
-     */
+     * @param Altitude
+    **/
+    
     public CoorDeplAvion (int NumVol, String NomVol, int X, int Y, int Altitude, int Angle, int Vitesse)
     {
         _NumVol = NumVol;
@@ -45,14 +47,10 @@ public class CoorDeplAvion implements Serializable
         _Vitesse = Vitesse;  
     }
   
-    public CoorDeplAvion ()
-    {
-    }
-    
     /**
      * @return la coordonnée _NumVol de l'avion
      */
-    public int GetNumVol ()
+    public static int GetNumVol ()
     {
         return _NumVol;
     }
@@ -60,7 +58,7 @@ public class CoorDeplAvion implements Serializable
     /**
      * @return la coordonnée _NomVol de l'avion
      */
-    public String GetNomVol ()
+    public static String GetNomVol ()
     {
         return _NomVol;
     }
@@ -68,7 +66,7 @@ public class CoorDeplAvion implements Serializable
     /**
      * @return la coordonnée _X de l'avion
      */
-    public int GetX ()
+    public static int GetX ()
     {
         return _X;
     }
@@ -76,7 +74,7 @@ public class CoorDeplAvion implements Serializable
     /**
      * @return la coordonnée _Y de l'avion
      */
-    public int GetY ()
+    public static int GetY ()
     {
         return _Y;
     }
@@ -84,7 +82,7 @@ public class CoorDeplAvion implements Serializable
     /**
      * @return la coordonnée _Altitude de l'avion
      */
-    public int GetAltitude ()
+    public static int GetAltitude ()
     {
         return _Altitude;
     }
@@ -92,7 +90,7 @@ public class CoorDeplAvion implements Serializable
     /**
      * @return la coordonnée _Angle de l'avion
      */
-    public int GetAngle ()
+    public static int GetAngle ()
     {
         return _Angle;
     }
@@ -100,7 +98,7 @@ public class CoorDeplAvion implements Serializable
     /**
      * @return la coordonnée _Vitesse de l'avion
      */
-    public int GetVitesse ()
+    public static int GetVitesse ()
     {
         return _Vitesse;
     }
@@ -108,56 +106,60 @@ public class CoorDeplAvion implements Serializable
      /**
     * @param NumVol la coordonnée NumVol à ajouter à l'avion
     */
-    public void SetNumVol (int NumVol)
+    public static void SetNumVol (int NumVol)
     {
-        this._NumVol = NumVol;
+        _NumVol = NumVol;
     }
    
     /**
     * @param NomVol la coordonnée NomVol à ajouter à l'avion
     */
-    public void SetNomVol (String NomVol)
+    public static void SetNomVol (String NomVol)
     {
-        this._NomVol = NomVol;
+        _NomVol = NomVol;
     }
     
     /**
     * @param X la coordonnée X à ajouter à l'avion 
     */
-    public void SetX (int X)
+    public static void SetX (int X)
     {
-        this._X = X;
+        _X = X;
     }
     
     /**
     * @param Y la coordonnée Y à ajouter à l'avion 
     */
-    public void SetY (int Y)
+    public static void SetY (int Y)
     {
-        this._Y = Y;
+        _Y = Y;
     }
     
     /**
     * @param Altitude la coordonnée Altitude à ajouter à l'avion 
     */
-    public void SetAltitude (int Altitude)
+    public static void SetAltitude (int Altitude)
     {
-        this._Altitude = Altitude;
+        _Altitude = Altitude;
     }
     
     /**
     * @param Angle la coordonnée Angle à ajouter à l'avion 
     */
-    public void SetAngle (int Angle)
+    public static void SetAngle (int Angle)
     {
-        this._Angle = Angle;
+        _Angle = Angle;
     }
     
     /**
     * @param Vitesse la coordonnée Vitesse à ajouter à l'avion 
     */
-    public void SetVitesse (int Vitesse)
+    public static void SetVitesse (int Vitesse)
     {
-        this._Vitesse = Vitesse;
+        _Vitesse = Vitesse;
+    }
+
+    public CoorDeplAvion() 
+    {
     }
 }

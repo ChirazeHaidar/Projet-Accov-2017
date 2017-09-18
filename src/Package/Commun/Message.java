@@ -31,7 +31,7 @@ public class Message implements Serializable
     public Avion _Avion;
     //Les informations de l'avion en question
 
-    public void Message (String Comm, String Typ, String Env, Avion Av, 
+    public Message (String Comm, String Typ, String Env, Avion Av, 
                          String Rec) 
     {
         this._Command = Comm;
@@ -41,11 +41,7 @@ public class Message implements Serializable
         this._Receveur = Rec;
     }
     
-    public Message (String Comm, String Typ, String Env, Avion Av,
-                    String Rec)
-    {
-    }
-    
+       
     public String EnvoyeMessage ()    
     {
         return "{Type de Commande: '" + _Command + "', Type: '" + _Type + "%s%n"
