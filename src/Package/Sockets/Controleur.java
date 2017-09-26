@@ -18,31 +18,17 @@ import Package.Interface.ControleurInterface;
  * @author Cynthia Abou Maroun
  */
 
-public class Controleur extends Thread
+public class Controleur extends Fonction
 {
-
-
-    private Socket _Socket;
-    public Fonction _Fonction;
-    
-    private String _NomControleur;
-    
-    private ObjectInputStream _In;
-    private ObjectOutputStream _Out;
-    
-    private ControleurInterface _ContInt;
-    
-    public Controleur ()
-    {
-        
-    }
     public Controleur(ControleurInterface _ContInterface) 
     {
         _ContInt = _ContInterface;
         
         try 
         {
-            if (!_Fonction.OpenConnexion()) 
+            _Socket = OpenConnexion();
+            
+            if (_Socket == null) 
             {
                 _ContInt.TextArea.append("%nErreur de connexion au SACA");
                 return;
@@ -59,7 +45,7 @@ public class Controleur extends Thread
             _ContInt.setTitle(_NomControleur);
             
             Message _Mess = new Message("Information", "Controleur", _NomControleur, null, "SACA");
-            _Fonction.Envoyer(_Mess);
+            Envoyer(_Mess);
             
             this.start();
 
@@ -73,10 +59,11 @@ public class Controleur extends Thread
     }
 
     @Override
-    public void run() {
-        while (_Fonction._TravailContinuel) 
+    public void run() 
+    {
+        while (_TravailContinuel) 
         {
-            _Fonction.Recevoir();
+            Recevoir();
         }
     }
 }
