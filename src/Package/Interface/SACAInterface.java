@@ -25,6 +25,7 @@ public class SACAInterface extends javax.swing.JFrame
         this.setTitle("Interface: SACA");
         this.setSize(1800, 1200);
         this.setLocationRelativeTo(null);
+        SACA sacaCs = new SACA(this);
     }
 
     /**

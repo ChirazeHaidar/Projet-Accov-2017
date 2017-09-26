@@ -7,7 +7,6 @@
 package Package.Interface;
 
 import Package.Commun.Avion;
-import Package.Commun.Fonction;
 import Package.Sockets.Controleur;
 /**
  *
@@ -20,11 +19,11 @@ public class ControleurInterface extends javax.swing.JFrame
      */
     
     private int NumVol;
-    Fonction _Fonction;
     Controleur _VolSocket = null;
     
     public ControleurInterface() 
     {
+        
         initComponents();
         this.setSize(1800, 1200);
         this.setLocationRelativeTo(null);
@@ -274,7 +273,7 @@ public class ControleurInterface extends javax.swing.JFrame
         {
             try 
             {
-                _VolSocket._Fonction.ChangementVitesse(NumVol, Integer.parseInt(TextFieldVitesse.getText()));
+                _VolSocket.ChangementVitesse(NumVol, Integer.parseInt(TextFieldVitesse.getText()));
             }  
             catch (InterruptedException e) 
             {
@@ -293,7 +292,7 @@ public class ControleurInterface extends javax.swing.JFrame
         {
             try 
             {
-                 _VolSocket._Fonction.ChangementAltitude(NumVol, Integer.parseInt(TextFieldAltitude.getText()));
+                 _VolSocket.ChangementAltitude(NumVol, Integer.parseInt(TextFieldAltitude.getText()));
             } 
             catch (InterruptedException e) 
             {
@@ -338,7 +337,7 @@ public class ControleurInterface extends javax.swing.JFrame
         {
             try 
             {
-                _VolSocket._Fonction.ChangementAngle(NumVol, Integer.parseInt(TextFieldAngle.getText()));
+                _VolSocket.ChangementAngle(NumVol, Integer.parseInt(TextFieldAngle.getText()));
             } 
             catch (InterruptedException e) 
             {
@@ -350,7 +349,7 @@ public class ControleurInterface extends javax.swing.JFrame
 
     private void ListeVolValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_ListeVolValueChanged
        // TODO add your handling code here:
-       if (_VolSocket._Fonction._VolDetecte == null) 
+       if (_VolSocket._VolDetecte == null) 
        {
            return;
        }
@@ -361,11 +360,11 @@ public class ControleurInterface extends javax.swing.JFrame
        {
            String NomVol= Objet.substring(9, 14);
            Avion _Avion = null;
-           for (int i = 0; i < _VolSocket._Fonction._VolDetecte.size(); i++) 
+           for (int i = 0; i < _VolSocket._VolDetecte.size(); i++) 
            {
-               if (_VolSocket._Fonction._VolDetecte.get(i).GetInfo().GetNomVol().equals(NomVol)) 
+               if (_VolSocket._VolDetecte.get(i).GetInfo().GetNomVol().equals(NomVol)) 
                {
-                   _Avion = _VolSocket._Fonction._VolDetecte.get(i);
+                   _Avion = _VolSocket._VolDetecte.get(i);
                    break;
                }
            }
@@ -406,7 +405,7 @@ public class ControleurInterface extends javax.swing.JFrame
         // TODO add your handling code here:
         if (_VolSocket != null)
         {
-            _VolSocket._Fonction.CloseConnexion();
+            _VolSocket.CloseConnexion();
         }
     }//GEN-LAST:event_formWindowClosing
     
